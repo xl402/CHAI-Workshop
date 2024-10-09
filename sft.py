@@ -69,8 +69,8 @@ if __name__ == '__main__':
     MODEL_NAME = "WorkshopSFT"
 
     # Load dataset
-    ds = load_data(f'ChaiML/Viral-ss-v1')
-    ds = ds.select_columns(['text'])
+    train_dataset = load_data(f'ChaiML/horror_data_formatted')
+    train_dataset = train_dataset.select_columns(['text'])
 
     # Load tokenizer and base model
     tokenizer = get_tokenizer(BASE_MODEL)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     # Define data collator for I/O training
     response_template =  "####\n"
     collator = get_data_collator(response_template)
-    verify_data_collator(ds, collator, "what is 1+1?\n####\nAssistant: 42!")
+    verify_data_collator(train_dataset, collator, "what is 1+1?\n####\nAssistant: 42!")
 
     # Load lora model
     lora_config = LoraConfig(
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     trainer = SFTTrainer(
         model,
         args=training_args,
-        train_dataset=ds,
+        train_dataset=train_dataset,
         tokenizer=tokenizer,
         data_collator=collator,
         max_seq_length=1024+512+128,
@@ -129,5 +129,5 @@ if __name__ == '__main__':
     trainer.save_model()
 
     trained_model = model.merge_and_unload()
-    # tokenizer.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
-    # trained_model.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
+    tokenizer.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
+    trained_model.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
