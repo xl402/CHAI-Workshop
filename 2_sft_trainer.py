@@ -11,6 +11,18 @@ import numpy as np
 import torch
 
 
+"""
+Goal
+- Train a model with SFT and verify indeed it has learnt the dataset
+
+Agenda
+- What is data collator? How do I know this works?
+- What is LoRA? How do I use this?
+- Key hyper parameters, how do I calculate my batch size?
+- How do I know my model was trained correctly?
+"""
+
+
 def load_data(dataset_name):
     ds = load_dataset(dataset_name, split='train')
     return ds
