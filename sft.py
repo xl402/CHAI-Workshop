@@ -117,7 +117,7 @@ if __name__ == '__main__':
         data_collator=collator,
         max_seq_length=1024+512+128,
         dataset_text_field="text",
-        peft_config=peft_config,
+        peft_config=lora_config,
     )
     trainer.train()
     trainer.save_model()
