@@ -5,6 +5,7 @@ from datasets import Dataset, load_dataset
 from peft import LoraConfig, get_peft_model
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+from transformers import pipeline
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 import numpy as np
 import torch
@@ -132,3 +133,15 @@ if __name__ == '__main__':
     trained_model = model.merge_and_unload()
     tokenizer.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
     trained_model.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
+
+    # Trained model verification -> Did it memorize the corpus?
+    text_generator = pipeline("text-generation", model=trained_model.half(), tokenizer=tokenizer)
+    prompt, expected_response = train_dataset['text'][0].split('\n####\n')
+    generated_text = text_generator(
+            prompt+'\n####\n',
+            max_new_tokens=200,
+            num_return_sequences=1,
+            eos_token_id=tokenizer.eos_token_id)
+    generated_text = generated_text[0]['generated_text'].split('\n####\n')[1]
+    print(f'Expected response: {expected_response}')
+    print(f'Generated response: {generated_text}')
