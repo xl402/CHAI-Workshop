@@ -6,6 +6,7 @@ from peft import LoraConfig, get_peft_model
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+import numpy as np
 import torch
 
 
