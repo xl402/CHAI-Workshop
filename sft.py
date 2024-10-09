@@ -39,6 +39,25 @@ def get_data_collator(response_template):
     return collator
 
 
+def verify_data_collator(dataset, collator, text=None):
+    res = []
+    for row in dataset:
+        _res = collator.torch_call([tokenizer(row['text'])])
+        pct = (_res['labels'] == -100).numpy().mean()
+        res.append(pct)
+    print((np.array(res) == 1).mean())
+    if text is not None:
+        print(collator.torch_call([tokenizer(text)]))
+
+
+def print_trainable_parameters(model):
+    size = 0
+    for name, param in model.named_parameters():
+      if param.requires_grad:
+          size += param.size().numel()
+    print(f'Total number of trainable parameters: {size // 1e6} million')
+
+
 def get_lora_base_model(model, lora_config):
     model.enable_input_require_grads()
     model = get_peft_model(model, lora_config)
@@ -49,27 +68,20 @@ if __name__ == '__main__':
     BASE_MODEL = "mistralai/Mistral-Nemo-Instruct-2407"
     MODEL_NAME = "WorkshopSFT"
 
+    # Load dataset
     ds = load_data(f'ChaiML/Viral-ss-v1')
     ds = ds.select_columns(['text'])
 
+    # Load tokenizer and base model
     tokenizer = get_tokenizer(BASE_MODEL)
     model = get_base_model(BASE_MODEL)
 
+    # Define data collator for I/O training
     response_template =  "####\n"
     collator = get_data_collator(response_template)
+    verify_data_collator(ds, collator, "what is 1+1?\n####\nAssistant: 42!")
 
-    # res = []
-    # for row in ds:
-    #     _res = collator.torch_call([tokenizer(row['text'])])
-    #     pct = (_res['labels'] == -100).numpy().mean()
-    #     res.append(pct)
-    # print((np.array(res) == 1).mean())
-
-    # txt = "soem random payload\n####\nVampire Queen: *She smiles at you warmly* Hi!\n"
-    # res = collator.torch_call([tokenizer(txt)])
-    # print(res)
-
-
+    # Load lora model
     lora_config = LoraConfig(
         lora_alpha=256,
         lora_dropout=0.05,
@@ -78,16 +90,10 @@ if __name__ == '__main__':
         task_type="CAUSAL_LM",
         target_modules="all-linear",
     )
-
     model = get_lora_base_model(model, lora_config)
+    print_trainable_parameters(model)
 
-    size = 0
-    for name, param in model.named_parameters():
-      if param.requires_grad:
-          size += param.size().numel()
-    print(f'Total number of trainable parameters: {size // 1e6} million')
-
-
+    # Train model
     training_args = TrainingArguments(
         num_train_epochs=4,
         learning_rate=1e-05,
