@@ -51,4 +51,4 @@ def format_payload(row):
 
 
 if __name__ == '__main__':
-    df = loa_data('ChaiML/Horror-SFT-v1')
+    df = load_data('ChaiML/Horror-SFT-v1')
