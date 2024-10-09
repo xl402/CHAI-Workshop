@@ -1,16 +1,12 @@
 import os
 import re
 
-from datasets import load_dataset
-from tqdm import tqdm
-import torch
+from datasets import Dataset, load_dataset
 from peft import LoraConfig, get_peft_model
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from trl import DPOTrainer, SFTTrainer
-from datasets import Dataset
+from tqdm import tqdm
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-
-BASE_MODEL = "mistralai/Mistral-Nemo-Instruct-2407"
+import torch
 
 
 def load_data(dataset_name):
@@ -29,7 +25,7 @@ def get_tokenizer(model_id):
 
 def get_base_model(model_id):
     model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
+        model_id,
         torch_dtype=torch.float16,
         attn_implementation="flash_attention_2",
     ).to('cuda')
@@ -43,18 +39,89 @@ def get_data_collator(response_template):
     return collator
 
 
+def get_lora_base_model(model, lora_config):
+    model.enable_input_require_grads()
+    model = get_peft_model(model, lora_config)
+    return model
+
+
 if __name__ == '__main__':
-    tag = 'Viral-ss-v1'
-    ds = load_data(f'ChaiML/{tag}')
+    BASE_MODEL = "mistralai/Mistral-Nemo-Instruct-2407"
+    MODEL_NAME = "WorkshopSFT"
+
+    ds = load_data(f'ChaiML/Viral-ss-v1')
     ds = ds.select_columns(['text'])
+
     tokenizer = get_tokenizer(BASE_MODEL)
     model = get_base_model(BASE_MODEL)
+
     response_template =  "####\n"
     collator = get_data_collator(response_template)
 
-    res = []
-    for row in ds:
-        _res = collator.torch_call([tokenizer(row['text'])])
-        pct = (_res['labels'] == -100).numpy().mean()
-        res.append(pct)
-    print((np.array(res) == 1).mean())
+    # res = []
+    # for row in ds:
+    #     _res = collator.torch_call([tokenizer(row['text'])])
+    #     pct = (_res['labels'] == -100).numpy().mean()
+    #     res.append(pct)
+    # print((np.array(res) == 1).mean())
+
+    # txt = "soem random payload\n####\nVampire Queen: *She smiles at you warmly* Hi!\n"
+    # res = collator.torch_call([tokenizer(txt)])
+    # print(res)
+
+
+    lora_config = LoraConfig(
+        lora_alpha=256,
+        lora_dropout=0.05,
+        r=128,
+        bias="none",
+        task_type="CAUSAL_LM",
+        target_modules="all-linear",
+    )
+
+    model = get_lora_base_model(model, lora_config)
+
+    size = 0
+    for name, param in model.named_parameters():
+      if param.requires_grad:
+          size += param.size().numel()
+    print(f'Total number of trainable parameters: {size // 1e6} million')
+
+
+    training_args = TrainingArguments(
+        num_train_epochs=4,
+        learning_rate=1e-05,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=16,
+        do_eval=True,
+        per_device_eval_batch_size=1,
+        adam_epsilon=1e-08,
+        lr_scheduler_type="constant_with_warmup",
+        warmup_ratio=0.1,
+        seed=42,
+        logging_steps=10,
+        save_steps=1,
+        eval_steps=50,
+        save_strategy="epoch",
+        output_dir=f"data/{MODEL_NAME}",
+        hub_model_id="dpo",
+        gradient_checkpointing=True,
+        bf16=True,
+    )
+
+    trainer = SFTTrainer(
+        model,
+        args=training_args,
+        train_dataset=ds,
+        tokenizer=tokenizer,
+        data_collator=collator,
+        max_seq_length=1024+512+128,
+        dataset_text_field="text",
+        peft_config=peft_config,
+    )
+    trainer.train()
+    trainer.save_model()
+
+    trained_model = model.merge_and_unload()
+    # tokenizer.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
+    # trained_model.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
