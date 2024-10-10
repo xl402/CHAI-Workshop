@@ -14,7 +14,7 @@ from a2_sft_trainer import print_trainable_parameters, get_lora_base_model
 
 
 if __name__ == '__main__':
-    BASE_MODEL = "mistralai/Mistral-Nemo-Instruct-2407"
+    BASE_MODEL = "ChaiML/WorkshopSFT"
     MODEL_NAME = "WorkshopDPO"
 
     # Load dataset
