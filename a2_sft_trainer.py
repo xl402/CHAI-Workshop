@@ -37,7 +37,7 @@ def get_tokenizer(model_id):
     return tokenizer
 
 
-def get_base_model(model_id):
+def get_base_model(model_id, tokenizer):
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.float16,
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     # Load tokenizer and base model
     tokenizer = get_tokenizer(BASE_MODEL)
-    model = get_base_model(BASE_MODEL)
+    model = get_base_model(BASE_MODEL, tokenizer)
 
     # Define data collator for I/O training
     response_template =  "####\n"
