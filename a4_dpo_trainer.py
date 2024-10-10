@@ -71,7 +71,7 @@ if __name__ == '__main__':
         max_length=1024+512+128,
         dataset_num_proc=18,
         max_prompt_length=1024+512,
-        peft_config=peft_config,
+        peft_config=lora_config,
     )
     dpo_trainer.train()
 
