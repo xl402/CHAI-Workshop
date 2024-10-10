@@ -5,7 +5,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 import torch
 from peft import LoraConfig, get_peft_model
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import DPOTrainer
 from datasets import Dataset
 
