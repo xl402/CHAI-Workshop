@@ -1,0 +1,10 @@
+bitsandbytes
+datasets
+flash-attn --no-build-isolation
+ipython
+peft
+pydantic
+transformers[torch]
+trl==0.8.6
+typing_extensions==4.7.1
+wandb

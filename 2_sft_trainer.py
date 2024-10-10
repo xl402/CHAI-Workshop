@@ -142,6 +142,7 @@ if __name__ == '__main__':
     trainer.train()
     trainer.save_model()
 
+    # Push to Hub
     trained_model = model.merge_and_unload()
     tokenizer.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
     trained_model.push_to_hub(f'ChaiML/{MODEL_NAME}', private=True)
