@@ -68,7 +68,7 @@ if __name__ == '__main__':
         beta=0.1,
         train_dataset=ds,
         tokenizer=tokenizer,
-        max_length=1024+512+128,
+        max_length=1600,
         dataset_num_proc=18,
         max_prompt_length=1024+512,
         peft_config=lora_config,

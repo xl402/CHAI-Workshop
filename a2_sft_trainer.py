@@ -135,7 +135,7 @@ if __name__ == '__main__':
         train_dataset=train_dataset,
         tokenizer=tokenizer,
         data_collator=collator,
-        max_seq_length=1024+512+128,
+        max_seq_length=1600,
         dataset_text_field="text",
         peft_config=lora_config,
     )
