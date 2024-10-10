@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # Load tokenizer and base model
     tokenizer = get_tokenizer(BASE_MODEL)
-    model = get_base_model(BASE_MODEL)
+    model = get_base_model(BASE_MODEL, tokenizer)
 
     # Load lora model
     lora_config = LoraConfig(
