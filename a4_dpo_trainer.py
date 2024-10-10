@@ -9,8 +9,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from trl import DPOTrainer
 from datasets import Dataset
 
-from 2_sft_trainer import load_data, get_tokenizer, get_base_model
-from 2_sft_trainer import print_trainable_parameters, get_lora_base_model
+from a2_sft_trainer import load_data, get_tokenizer, get_base_model
+from a2_sft_trainer import print_trainable_parameters, get_lora_base_model
 
 
 if __name__ == '__main__':
