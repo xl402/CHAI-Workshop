@@ -40,7 +40,7 @@ def get_tokenizer(model_id):
 def get_base_model(model_id, tokenizer):
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
     ).to('cuda')
     model.config.pad_token_id = tokenizer.pad_token_id
